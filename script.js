@@ -1,148 +1,199 @@
-//////////// MEU CODIGO APARTIR DAQUI////////////////////////
-
 const baseUrl = "https://el-geladon-backend-by-ip.herokuapp.com/paletas";
+
 let paletas;
 
+
 async function findAllPaletas() {
-  const lista_Paletas = await fetch(`${baseUrl}/find-paletas`);
-  console.log(`"Paletas:" ${lista_Paletas}`);
+  const response = await fetch(`${baseUrl}/find-paletas`);
 
-  const paletas = await lista_Paletas.json();
-  console.log("Paletas:", paletas);
-  paletas.map((paleta) => {
-    return document.getElementById("paletaList").insertAdjacentHTML(
+  paletas = await response.json();
+  console.log("paletas", paletas);
+
+  paletas.forEach((paleta) => {
+    let isEdit = true;
+    document.getElementById("paletaList").insertAdjacentHTML(
       "beforeend",
-      `
-    <div class="PaletaListaItem">
-         <div>
+      `<div class="PaletaListaItem" id="PaletaListaItem_${paleta._id}"><div>
             <div class="PaletaListaItem__sabor">${paleta.sabor}</div>
-            <div class="PaletaListaItem__preco">R$${paleta.preco},00</div>
+            <div class="PaletaListaItem__preco">R$ ${paleta.preco.toFixed(
+              2
+            )}</div>
             <div class="PaletaListaItem__descricao">${paleta.descricao}</div>
-        </div>
-      <img class="PaletaListaItem__foto" src=${paleta.foto} alt="Paleta de ${paleta.sabor}" />
-    </div>
-
-    `
+          <div class="PaletaListaItem__acoes Acoes">
+            <i class="Acoes__editar fa-solid fa-pen-to-square"id=${
+              paleta._id
+            } onclick="abrirModal(${isEdit})"></i>
+            <button class="Acoes__deletar" id=${
+              paleta._id
+            } onclick="deletePaleta()">deletar</button>
+          </div>
+          </div>
+            <img class="PaletaListaItem__foto" 
+            src=${paleta.foto}
+             alt=${`Paleta de ${paleta.sabor}`} />
+        </div>`
     );
   });
 }
 
 findAllPaletas();
 
-// const id = "6286439844c92afd9bbb7cc8"
 
-async function fetchOnePaleta(id) {
-  const resposta = await fetch(`${baseUrl}/find-paleta/${id}`);
-  const paleta = await resposta.json();
-  console.log("paletaID:", paleta);
+const findPaletaById = async () => {
+  const inputElement = document.getElementById("idPaleta").value; 
 
-  return paleta;
-}
+  const paletaEscolhida = paletas.filter(
+    (paleta) => paleta.sabor === inputElement
+  ); 
 
-async function findAllPaleta() {
-  const inputConsulta = document.getElementById("idPaleta");
-  console.log("input é :", inputConsulta);
-  const id = inputConsulta.value;
-  console.log("input é :", id);
+  
 
-  const resposta = await fetch(`${baseUrl}/find-paleta/${id}`);
+  const id = paletaEscolhida[0]._id; 
 
-  const paleta = await resposta.json();
-  console.log("paletaID:", paleta);
+  const response = await fetch(`${baseUrl}/find-paleta/${id}`);
+  const paleta = await response.json();
 
-  const divEscolha = document.querySelector("#escolha");
-  console.log("A div que pegue foi:", escolha);
+  let isEdit = true;
 
-  divEscolha.innerHTML = `
+  const paletaEscolhidaDiv = document.getElementById("paletaEscolhida");
 
-  <div class="PaletaListaItem">
-  <div>
-     <div class="PaletaListaItem__sabor">${paleta.sabor}</div>
-     <div class="PaletaListaItem__preco">R$${paleta.preco},00</div>
-     <div class="PaletaListaItem__descricao">${paleta.descricao}</div>
- </div>
-<img class="PaletaListaItem__foto" src=${paleta.foto} alt="Paleta de ${paleta.sabor}" />
-</div>
+  paletaEscolhidaDiv.innerHTML = `
+    <div class="PaletaListaItem" id="PaletaListaItem_${paleta._id}"><div>
+        <div class="PaletaCardItem__sabor">${paleta.sabor}</div>
+        <div class="PaletaCardItem__preco">R$ ${paleta.preco.toFixed(2)}</div>
+        <div class="PaletaCardItem__descricao">${paleta.descricao}</div>
+        <div class="PaletaListaItem__acoes Acoes">
+          <i class="Acoes__editar fa-solid fa-pen-to-square"id=${
+            paleta._id
+          } onclick="abrirModal(${isEdit})"></i>
+          <button class="Acoes__deletar" id=${
+            paleta._id
+          } onclick="deletePaleta()">deletar</button>
+        </div>
+      </div>
+        <img class="PaletaCardItem__foto" src=${
+          paleta.foto
+        } alt=${`Paleta de ${paleta.sabor}`} />
+    </div>`;
+};
+
+
+
+async function abrirModal(isEdit = false) {
+  if (isEdit) {
+    document.querySelector("#title-header-modal").innerText =
+      "Atualizar uma paleta";
+    document.querySelector("#button-form-modal").innerText = "Atualizar";
+
     
-  `;
-}
 
-// findAllPaleta()
-const modalElement = document.getElementById("overlay");
+    const id = event.target.id;
+    
 
-function abrirModalCadastro() {
-  modalElement.style.display = "flex";
+    const response = await fetch(`${baseUrl}/find-paleta/${id}`);
+    const paleta = await response.json();
+
+    document.querySelector("#id").value = paleta._id;
+    document.querySelector("#sabor").value = paleta.sabor;
+    document.querySelector("#preco").value = paleta.preco;
+    document.querySelector("#descricao").value = paleta.descricao;
+    document.querySelector("#foto").value = paleta.foto;
+  } else {
+    document.querySelector("#title-header-modal").innerText =
+      "Cadastrar uma paleta";
+    document.querySelector("#button-form-modal").innerText = "Cadastrar";
+  }
+  document.querySelector(".modal-overlay").style.display = "flex";
 }
 
 function fecharModalCadastro() {
-  modalElement.style.display = "none";
+  document.querySelector(".modal-overlay").style.display = "none";
+
+  document.querySelector("#sabor").value = "";
+  document.querySelector("#preco").value = 0;
+  document.querySelector("#descricao").value = "";
+  document.querySelector("#foto").value = "";
 }
 
-async function createPaleta() {
-  const sabor = document.getElementById("sabor").value;
-  const preco = document.getElementById("preco").value;
-  const descricao = document.getElementById("descricao").value;
-  const foto = document.getElementById("foto").value;
 
-  const paleta = { sabor, preco, descricao, foto };
+async function submitPaleta() {
+  const id = document.getElementById("id").value;
+  const sabor = document.querySelector("#sabor").value;
+  const preco = document.querySelector("#preco").value;
+  const descricao = document.querySelector("#descricao").value;
+  const foto = document.querySelector("#foto").value;
 
-  console.log("Paleta criada agorinha...:", paleta);
+  const paleta = {
+    id,
+    sabor,
+    preco,
+    descricao,
+    foto,
+  };
 
-  // paleta = {
-  //   sabor: "Maracuja",
-  //   descricao:
-  //     "Quam vulputate dignissim suspendisse in est ante in nibh mauris.",
-  //   foto: "./assets/images/maracuja.png",
-  //   preco: 4,
-  // };
+  const modoEdicaoAtivado = !!id;
+  const endpoint = baseUrl + (modoEdicaoAtivado ? `/update/${id}` : "/create");
 
-  const lista_Paletas = await fetch(`${baseUrl}/create-paleta`, {
-    method: "post",
-    headers: { "Content-Type": "application/json" },
+  const response = await fetch(endpoint, {
+    method: modoEdicaoAtivado ? "put" : "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
     mode: "cors",
     body: JSON.stringify(paleta),
   });
 
-  const novaPaleta = await lista_Paletas.json();
-  console.log("novaPaleta:", novaPaleta);
+  const novaPaleta = await response.json();
+
+  let isEdit = true;
+  const html = `<div class="PaletaListaItem" id="PaletaListaItem_${
+    paleta._id
+  }"><div>
+      <div class="PaletaListaItem__sabor">${novaPaleta.sabor}</div>
+      <div class="PaletaListaItem__preco">R$ ${novaPaleta.preco.toFixed(
+        2
+      )}</div>
+      <div class="PaletaListaItem__descricao">${novaPaleta.descricao}</div>
+      <div class="PaletaListaItem__acoes Acoes">
+        <i class="Acoes__editar fa-solid fa-pen-to-square"id=${
+          paleta._id
+        } onclick="abrirModal(${isEdit})"></i>
+        <button class="Acoes__deletar" id=${
+          paleta._id
+        } onclick="deletePaleta()">deletar</button>
+      </div>
+    </div>
+      <img class="PaletaListaItem__foto" src=${
+        novaPaleta.foto
+      } alt=${`Paleta de ${novaPaleta.sabor}`} />
+    </div>`;
+
+  if (modoEdicaoAtivado) {
+    document.getElementById(`PaletaListaItem_${id}`).outerHTML = html;
+  } else {
+    document.getElementById("paletaList").insertAdjacentHTML("beforeend", html);
+  }
+
+  document.getElementById("id").value = "";
+
   fecharModalCadastro();
-  findAllPaletas();
+  document.location.reload(true); 
 }
 
-async function updatePaleta() {
-  const id = "6286439844c92afd9bbb7cc8";
 
-  const paletaAntesDAAtualizacao = await fetchOnePaleta(id);
+const deletePaleta = async () => {
+  const id = event.target.id;
+  console.log("id", id);
 
-  // const paleta = {sabor : "Açai", preco : 99, descricao:"Nova Descrição", foto: "6286439844c92afd9bbb7cc7"}
-  console.log("Paleta dentro do Update:", paletaAntesDAAtualizacao);
-  const paleta = { ...paletaAntesDAAtualizacao, sabor: "Morango" };
-
-  const lista_Paletas = await fetch(`${baseUrl}/update/${id}`, {
-    method: "put",
-    headers: { "Content-Type": "application/json" },
-    mode: "cors",
-    body: JSON.stringify(paleta),
-  });
-
-  const paletaAntesAtualizada = await lista_Paletas.json();
-  console.log("Paleta atualizada:", paletaAntesAtualizada);
-}
-
-updatePaleta();
-
-// createPaleta();
-
-async function deleteOnePaleta() {
-  const id = "6286439844c92afd9bbb7cc8";
-
-  const lista_Paletas = await fetch(`${baseUrl}/delete/${id}`, {
+  const response = await fetch(`${baseUrl}/delete/${id}`, {
     method: "delete",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     mode: "cors",
   });
-  const deleteResponde = await lista_Paletas.json();
-  console.log("Paleta atualizada:", deleteResponde);
-}
-
-// deleteOnePaleta()
+  const result = await response.json();
+  alert(result.message);
+  document.getElementById("paletaList").innerHTML = "";
+  document.location.reload(true);
+};
